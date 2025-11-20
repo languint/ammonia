@@ -1,4 +1,4 @@
-use crate::lexer::defs::Span;
+use ammonia_defs::source::Span;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {

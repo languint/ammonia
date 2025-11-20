@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 ammonia_errors = { workspace = true }
+ammonia_defs = { workspace = true }
 
 [lints]
 workspace = true
