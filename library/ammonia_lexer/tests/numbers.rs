@@ -11,7 +11,7 @@ mod tests {
     fn positive_float() {
         let src = "1.0";
         let lexer = AmmoniaLexer::from_src(src.to_string());
-        let result = lexer.parse();
+        let result = lexer.lex();
         assert!(!result.has_errors());
         assert_eq!(
             result.tokens,
@@ -29,7 +29,7 @@ mod tests {
     fn negative_float() {
         let src = "-1.0";
         let lexer = AmmoniaLexer::from_src(src.to_string());
-        let result = lexer.parse();
+        let result = lexer.lex();
         assert!(!result.has_errors());
         assert_eq!(
             result.tokens,
@@ -47,7 +47,7 @@ mod tests {
     fn trailing_decimal() {
         let src = "1.";
         let lexer = AmmoniaLexer::from_src(src.to_string());
-        let result = lexer.parse();
+        let result = lexer.lex();
         assert!(result.has_errors());
         assert_eq!(
             result.errors,
@@ -65,7 +65,7 @@ mod tests {
     fn leading_decimal() {
         let src = ".1";
         let lexer = AmmoniaLexer::from_src(src.to_string());
-        let result = lexer.parse();
+        let result = lexer.lex();
         assert!(result.has_errors());
         assert_eq!(
             result.errors,
@@ -83,7 +83,7 @@ mod tests {
     fn positive_int() {
         let src = "42";
         let lexer = AmmoniaLexer::from_src(src.to_string());
-        let result = lexer.parse();
+        let result = lexer.lex();
         assert!(!result.has_errors());
         assert_eq!(
             result.tokens,
@@ -101,7 +101,7 @@ mod tests {
     fn negative_int() {
         let src = "-42";
         let lexer = AmmoniaLexer::from_src(src.to_string());
-        let result = lexer.parse();
+        let result = lexer.lex();
         assert!(!result.has_errors());
         assert_eq!(
             result.tokens,
@@ -119,7 +119,7 @@ mod tests {
     fn int_overflow() {
         let src = "9223372036854775808";
         let lexer = AmmoniaLexer::from_src(src.to_string());
-        let result = lexer.parse();
+        let result = lexer.lex();
         assert!(result.has_errors());
         assert_eq!(
             result.errors,
@@ -137,7 +137,7 @@ mod tests {
     fn float_overflow_large() {
         let src = "1797693134862315708145274237317043567980705675258449965989174768031572607800285387605895586327668781715404589535143824642343213268894641827684675467035375169860499105765512820762454900903893289440758685084551339423045832369032229481658085593321233482747978262041447231687381771809192998812504040261841248583680.0";
         let lexer = AmmoniaLexer::from_src(src.to_string());
-        let result = lexer.parse();
+        let result = lexer.lex();
         assert!(result.has_errors());
         assert_eq!(
             result.errors,
@@ -155,7 +155,7 @@ mod tests {
     fn braces_and_whitespace() {
         let src = "{ 123 -456.78 }";
         let lexer = AmmoniaLexer::from_src(src.to_string());
-        let result = lexer.parse();
+        let result = lexer.lex();
         assert!(!result.has_errors());
         assert_eq!(
             result.tokens,
