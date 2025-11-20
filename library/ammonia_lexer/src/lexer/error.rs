@@ -21,19 +21,18 @@ pub enum LexerError {
     InvalidInt(InvalidIntError, Span),
 }
 
-impl<'a> From<LexerError> for AmmoniaErr {
+impl From<LexerError> for AmmoniaErr {
     fn from(err: LexerError) -> Self {
         let code = err.to_code();
 
         let severity = match &err {
-            LexerError::InvalidCharacter(_, _) => ErrSeverity::Error,
             LexerError::InvalidFloat(kind, _) => match kind {
                 InvalidFloatError::Overflow => ErrSeverity::Error,
                 InvalidFloatError::TrailingDecimal | InvalidFloatError::LeadingDecimal => {
                     ErrSeverity::Warning
                 }
             },
-            LexerError::InvalidInt(InvalidIntError::Overflow, _) => ErrSeverity::Error,
+            _ => ErrSeverity::Error,
         };
 
         AmmoniaErr {
@@ -48,9 +47,9 @@ impl LexerError {
     #[must_use]
     pub fn get_span(&self) -> Option<&Span> {
         match self {
-            Self::InvalidCharacter(_, s) => Some(s),
-            Self::InvalidFloat(_, s) => Some(s),
-            Self::InvalidInt(_, s) => Some(s),
+            Self::InvalidCharacter(_, s) | Self::InvalidFloat(_, s) | Self::InvalidInt(_, s) => {
+                Some(s)
+            }
         }
     }
 

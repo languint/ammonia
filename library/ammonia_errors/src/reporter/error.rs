@@ -6,6 +6,7 @@ pub enum ErrReporterErr {
 }
 
 impl ErrReporterErr {
+    #[must_use] 
     pub fn to_code(&self) -> ErrCode {
         match self {
             ErrReporterErr::NotEnoughSpans(_) => ErrCode::E9000,
