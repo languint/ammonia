@@ -23,6 +23,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "ammonia_lexer"
+version = "0.1.0"
+dependencies = [
+ "ammonia_errors",
+]
+
+[[package]]
 name = "ammonia_parser"
 version = "0.1.0"
 dependencies = [
