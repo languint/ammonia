@@ -40,7 +40,7 @@ pub fn gen_error_codes(input: TokenStream) -> TokenStream {
     });
 
     let expanded = quote! {
-        #[derive(Debug, PartialEq, Eq)]
+        #[derive(Debug, Clone, PartialEq, Eq)]
         pub enum #name {
             #(#variants),*
         }

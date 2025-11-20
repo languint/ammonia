@@ -41,6 +41,7 @@ dependencies = [
 name = "ammonia_parser"
 version = "0.1.0"
 dependencies = [
+ "ammonia_errors",
  "chumsky",
  "logos",
 ]

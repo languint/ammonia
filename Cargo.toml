@@ -5,6 +5,7 @@ members = ["ammoniac","library/ammonia_core", "library/ammonia_error_macros", "l
 [workspace.dependencies]
 ammonia_core = { path = "library/ammonia_core" }
 ammonia_error_macros = { path = "library/ammonia_error_macros" }
+ammonia_errors = { path = "library/ammonia_errors" }
 
 [workspace.lints.clippy]
 all = { level = "warn", priority = -1 }

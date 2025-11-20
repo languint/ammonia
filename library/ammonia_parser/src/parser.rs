@@ -6,6 +6,8 @@ use logos::Logos;
 
 use crate::{expr::Expr, token::Token};
 
+//TODO: Make our own parser, get rid of chumsky
+
 pub struct AmmoniaParser {}
 impl AmmoniaParser {
     fn parser<'tokens, 'src: 'tokens, I>()
