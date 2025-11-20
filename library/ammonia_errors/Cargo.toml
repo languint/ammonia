@@ -1,0 +1,9 @@
+[package]
+name = "ammonia_errors"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ammonia_error_macros = { workspace = true }
+[lints]
+workspace = true

@@ -22,6 +22,22 @@ name = "ammonia_core"
 version = "0.1.0"
 
 [[package]]
+name = "ammonia_error_macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "ammonia_errors"
+version = "0.1.0"
+dependencies = [
+ "ammonia_error_macros",
+]
+
+[[package]]
 name = "ammonia_parser"
 version = "0.1.0"
 dependencies = [
