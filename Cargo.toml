@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["ammoniac","library/ammonia_core"]
+members = ["ammoniac","library/ammonia_core", "library/ammonia_parser"]
 
 [workspace.dependencies]
 ammonia_core = { path = "library/ammonia_core" }
