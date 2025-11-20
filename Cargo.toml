@@ -3,7 +3,6 @@ resolver = "3"
 members = ["ammoniac","library/ammonia_core", "library/ammonia_error_macros", "library/ammonia_errors", "library/ammonia_parser"]
 
 [workspace.dependencies]
-ammonia_core = { path = "library/ammonia_core" }
 ammonia_error_macros = { path = "library/ammonia_error_macros" }
 ammonia_errors = { path = "library/ammonia_errors" }
 

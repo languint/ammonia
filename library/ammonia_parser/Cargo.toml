@@ -5,7 +5,6 @@ edition = "2024"
 
 [dependencies]
 ammonia_errors = { workspace = true }
-chumsky = "0.11.2"
 logos = "0.15.1"
 
 [lints]
