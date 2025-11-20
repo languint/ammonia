@@ -82,12 +82,14 @@ pub struct AmmoniaLexer {
     pub src: String,
 }
 impl AmmoniaLexer {
+    #[must_use] 
     pub fn from_src(src: String) -> Self {
         Self { src }
     }
 }
 
 impl AmmoniaLexer {
+    #[must_use] 
     pub fn lex(&self) -> LexerResult {
         let mut result = LexerResult::default();
         let mut chars = self.src.char_indices().peekable();
@@ -120,12 +122,12 @@ impl AmmoniaLexer {
 
             match c {
                 '-' => {
-                    if let Some(&(_, next_c)) = chars.peek() {
-                        if next_c.is_digit(10) || next_c == '.' {
+                    if let Some(&(_, next_c)) = chars.peek()
+                        && (next_c.is_ascii_digit() || next_c == '.') {
                             let mut number = "-".to_string();
                             let mut end_idx = start_idx + 1;
                             while let Some(&(idx, next_c)) = chars.peek() {
-                                if next_c.is_digit(10) || next_c == '.' {
+                                if next_c.is_ascii_digit() || next_c == '.' {
                                     number.push(next_c);
                                     end_idx = idx + 1;
                                     chars.next();
@@ -136,24 +138,23 @@ impl AmmoniaLexer {
                             AmmoniaLexer::lex_number(
                                 &self.src,
                                 start_idx,
-                                number,
+                                &number,
                                 end_idx,
                                 &mut result,
                             );
                             continue;
                         }
-                    }
 
                     result.tokens.push(Token::Minus(Span {
                         range: start_idx..start_idx + 1,
                         slice: "-".to_string(),
-                    }))
+                    }));
                 }
                 '0'..='9' | '.' => {
                     let mut number = c.to_string();
                     let mut end_idx = start_idx + 1;
                     while let Some(&(idx, next_c)) = chars.peek() {
-                        if next_c.is_digit(10) || next_c == '.' {
+                        if next_c.is_ascii_digit() || next_c == '.' {
                             number.push(next_c);
                             end_idx = idx + 1;
                             chars.next();
@@ -161,7 +162,7 @@ impl AmmoniaLexer {
                             break;
                         }
                     }
-                    AmmoniaLexer::lex_number(&self.src, start_idx, number, end_idx, &mut result);
+                    AmmoniaLexer::lex_number(&self.src, start_idx, &number, end_idx, &mut result);
                 }
                 c if c.is_whitespace() => {}
                 _ => {
@@ -182,7 +183,7 @@ impl AmmoniaLexer {
     fn lex_number(
         src: &str,
         start_idx: usize,
-        number: String,
+        number: &str,
         end_idx: usize,
         result: &mut LexerResult,
     ) {

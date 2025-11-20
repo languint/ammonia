@@ -8,6 +8,7 @@ pub struct LexerResult {
 
 impl LexerResult {
     #[inline]
+    #[must_use] 
     pub fn has_errors(&self) -> bool {
         !self.errors.is_empty()
     }

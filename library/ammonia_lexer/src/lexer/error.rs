@@ -22,6 +22,7 @@ pub enum LexerError {
 }
 
 impl LexerError {
+    #[must_use] 
     pub fn to_code(&self) -> ErrCode {
         match self {
             Self::InvalidCharacter(_, _) => ErrCode::E0001,
