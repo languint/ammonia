@@ -1,12 +1,9 @@
 [workspace]
 resolver = "3"
-members = ["ammoniac","library/ammonia_core", "library/ammonia_defs", "library/ammonia_error_macros", "library/ammonia_errors", "library/ammonia_lexer", "library/ammonia_parser"]
+members = ["ammonia", "lib/ammonia_core"]
 
 [workspace.dependencies]
-ammonia_error_macros = { path = "library/ammonia_error_macros" }
-ammonia_errors = { path = "library/ammonia_errors" }
-ammonia_lexer = { path = "library/ammonia_lexer" }
-ammonia_defs = { path = "library/ammonia_defs" }
+ammonia_core = { path = "library/ammonia_core" }
 
 [workspace.lints.clippy]
 all = { level = "warn", priority = -1 }

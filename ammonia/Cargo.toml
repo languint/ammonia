@@ -1,11 +1,9 @@
 [package]
-name = "ammonia_parser"
+name = "ammonia"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-ammonia_errors = { workspace = true }
-logos = "0.15.1"
 
 [lints]
 workspace = true
