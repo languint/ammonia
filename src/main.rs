@@ -1,3 +1,4 @@
+mod board;
 mod color;
 mod piece;
 
