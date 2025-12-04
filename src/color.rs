@@ -18,8 +18,8 @@ impl std::ops::Not for Color {
 }
 
 impl Color {
-    pub fn index(&self) -> usize {
-        match *self {
+    pub fn index(self) -> usize {
+        match self {
             Color::WHITE => 0,
             Color::BLACK => 1,
             _ => {

@@ -24,15 +24,15 @@ impl Piece {
 
 impl Piece {
     /// Retrieve the color bits of a [`Piece`]
-    pub fn get_color(&self) -> Option<Color> {
-        if self == &Piece::NONE {
+    pub fn get_color(self) -> Option<Color> {
+        if self == Piece::NONE {
             return None;
         }
         Some(Color(self.0 >> Piece::COLOR_SHIFT))
     }
 
     /// Retrieve the type bits of a [`Piece`]
-    pub fn get_type(&self) -> Piece {
+    pub fn get_type(self) -> Piece {
         Piece(self.0 & 0b00111)
     }
 }
