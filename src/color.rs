@@ -22,7 +22,10 @@ impl Color {
         match *self {
             Color::WHITE => 0,
             Color::BLACK => 1,
-            _ => unreachable!(),
+            _ => {
+                dbg!(self);
+                panic!()
+            }
         }
     }
 }

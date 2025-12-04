@@ -16,9 +16,19 @@ impl Piece {
 }
 
 impl Piece {
+    /// Construct a new [`Piece`] from color and type bits.
+    pub fn new(color: Color, piece_type: Piece) -> Piece {
+        Piece((color.0 << Piece::COLOR_SHIFT) | piece_type.0)
+    }
+}
+
+impl Piece {
     /// Retrieve the color bits of a [`Piece`]
-    pub fn get_color(&self) -> Color {
-        Color(self.0 >> Piece::COLOR_SHIFT)
+    pub fn get_color(&self) -> Option<Color> {
+        if self == &Piece::NONE {
+            return None;
+        }
+        Some(Color(self.0 >> Piece::COLOR_SHIFT))
     }
 
     /// Retrieve the type bits of a [`Piece`]
@@ -28,9 +38,16 @@ impl Piece {
 }
 
 impl Piece {
-    /// Construct a new [`Piece`] from color and type bits.
-    pub fn new(color: Color, piece_type: Piece) -> Piece {
-        Piece((color.0 << Piece::COLOR_SHIFT) | piece_type.0)
+    pub fn index(self) -> usize {
+        match self.get_type() {
+            Piece::PAWN => 0,
+            Piece::KNIGHT => 1,
+            Piece::BISHOP => 2,
+            Piece::ROOK => 3,
+            Piece::QUEEN => 4,
+            Piece::KING => 5,
+            _ => unreachable!("Piece::index called on NONE or invalid piece"),
+        }
     }
 }
 
@@ -53,7 +70,7 @@ mod tests {
     fn accessors() {
         let piece = Piece::new(Color::WHITE, Piece::PAWN);
 
-        assert_eq!(piece.get_color(), Color::WHITE);
+        assert_eq!(piece.get_color(), Some(Color::WHITE));
         assert_eq!(piece.get_type(), Piece::PAWN);
     }
 }
