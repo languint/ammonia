@@ -3,6 +3,9 @@ impl NrOf {
     pub const SQUARES: usize = 64;
     pub const FILES: usize = 8;
     pub const RANKS: usize = 8;
+
+    pub const PIECES: usize = 6;
+    pub const COLORS: usize = 2;
 }
 
 /// A file on the chess board, [A-H]->[0-7]

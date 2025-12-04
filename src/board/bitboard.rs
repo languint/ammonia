@@ -26,15 +26,86 @@ impl Bitboard {
     }
 }
 
+impl Default for Bitboard {
+    fn default() -> Self {
+        Bitboard::EMPTY
+    }
+}
+
 impl Bitboard {
     #[inline]
-    pub fn get_bit(self, square: Square) -> u64 {
-        self.0 & (1u64 << square.0)
+    pub fn get_bit(self, square: Square) -> bool {
+        (self.0 & (1u64 << square.0)) != 0
     }
 
     #[inline]
-    pub fn set_bit(&mut self, square: Square, value: u64) {
-        self.0 |= value << square.0;
+    pub fn set_bit(&mut self, square: Square, value: bool) {
+        if value {
+            self.0 |= 1u64 << square.0;
+        } else {
+            self.0 &= !(1u64 << square.0);
+        }
+    }
+}
+
+impl Bitboard {
+    pub fn pop(self) -> u32 {
+        self.0.count_ones()
+    }
+
+    #[allow(clippy::cast_possible_truncation)]
+    pub fn lsb(self) -> Option<u8> {
+        if self.0 == 0 {
+            None
+        } else {
+            Some(self.0.trailing_zeros() as u8)
+        }
+    }
+
+    pub fn pop_lsb(&mut self) -> Option<u8> {
+        let lsb = self.lsb()?;
+        self.0 &= self.0 - 1;
+        Some(lsb)
+    }
+}
+
+impl std::ops::BitAnd for Bitboard {
+    type Output = Bitboard;
+    fn bitand(self, rhs: Self) -> Self::Output {
+        Bitboard(self.0 & rhs.0)
+    }
+}
+
+impl std::ops::BitAndAssign for Bitboard {
+    fn bitand_assign(&mut self, rhs: Self) {
+        self.0 &= rhs.0;
+    }
+}
+
+impl std::ops::BitOr for Bitboard {
+    type Output = Bitboard;
+    fn bitor(self, rhs: Self) -> Self::Output {
+        Bitboard(self.0 | rhs.0)
+    }
+}
+
+impl std::ops::BitOrAssign for Bitboard {
+    fn bitor_assign(&mut self, rhs: Self) {
+        self.0 |= rhs.0;
+    }
+}
+
+impl std::ops::BitXor for Bitboard {
+    type Output = Bitboard;
+    fn bitxor(self, rhs: Self) -> Self::Output {
+        Bitboard(self.0 ^ rhs.0)
+    }
+}
+
+impl std::ops::Not for Bitboard {
+    type Output = Bitboard;
+    fn not(self) -> Self::Output {
+        Bitboard(!self.0)
     }
 }
 
@@ -70,7 +141,7 @@ mod tests {
     #[test]
     fn accessors() {
         let mut bitboard = Bitboard::EMPTY;
-        bitboard.set_bit(Square(0), 1);
-        assert_eq!(bitboard.get_bit(Square(0)), 1);
+        bitboard.set_bit(Square(0), true);
+        assert_eq!(bitboard.get_bit(Square(0)), true);
     }
 }
