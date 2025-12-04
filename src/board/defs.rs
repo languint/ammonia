@@ -59,6 +59,7 @@ impl Rank {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Square(pub u8);
 impl Square {
+    #[allow(clippy::cast_possible_truncation)]
     pub const ALL_SQUARES: [Square; NrOf::SQUARES] = {
         let mut squares: [Square; NrOf::SQUARES] = [Square(0); NrOf::SQUARES];
         let mut i = 0;
@@ -76,11 +77,11 @@ impl Square {
         Square((rank.0 * 8) + file.0)
     }
 
-    pub fn get_rank(&self) -> Rank {
+    pub fn get_rank(self) -> Rank {
         Rank(self.0 / 8)
     }
 
-    pub fn get_file(&self) -> File {
+    pub fn get_file(self) -> File {
         File(self.0 % 8)
     }
 }
