@@ -3,7 +3,7 @@ use crate::{
         bitboard::Bitboard,
         defs::{NrOf, Square},
     },
-    color::Color,
+    color::{self, Color},
     game::game_move::{Move, MoveFlag},
     piece::Piece,
 };
@@ -58,6 +58,113 @@ pub enum MakeMoveError {
 }
 
 impl Board {
+    fn make_capture_move(
+        &mut self,
+        dest_index: usize,
+        dest_mask: Bitboard,
+    ) -> Result<(), MakeMoveError> {
+        let captured_piece = self.pieces[dest_index];
+        if captured_piece == Piece::NONE {
+            return Err(MakeMoveError::NoCaptureVictim);
+        }
+
+        let captured_piece_index = captured_piece.index();
+        let captured_color_index = captured_piece
+            .get_color()
+            .ok_or(MakeMoveError::InvalidPieceColor)?
+            .index();
+
+        self.bb_pieces[captured_piece_index] &= !dest_mask;
+        self.bb_colors[captured_color_index] &= !dest_mask;
+        self.pieces[dest_index] = Piece::NONE;
+
+        Ok(())
+    }
+
+    fn make_en_passant_move(&mut self, dest: Square, color: Color) -> Result<(), MakeMoveError> {
+        let capture_square = if color == Color::WHITE {
+            Square(dest.0 - 8)
+        } else {
+            Square(dest.0 + 8)
+        };
+
+        let capture_index = capture_square.0 as usize;
+        let captured_piece = self.pieces[capture_index];
+        let captured_type = captured_piece.index();
+        let captured_color_index = captured_piece
+            .get_color()
+            .ok_or(MakeMoveError::InvalidPieceColor)?
+            .index();
+
+        let mask = Bitboard::square_mask(capture_square);
+        self.bb_pieces[captured_type] &= !mask;
+        self.bb_colors[captured_color_index] &= !mask;
+        self.pieces[capture_index] = Piece::NONE;
+
+        Ok(())
+    }
+
+    fn make_castling_move(&mut self, dest: Square, color_index: usize) {
+        let (rook_src, rook_dest) = match dest {
+            Square::G1 => (Square::H1, Square::F1),
+            Square::C1 => (Square::A1, Square::D1),
+            Square::G8 => (Square::H8, Square::F8),
+            Square::C8 => (Square::A8, Square::D8),
+            _ => unreachable!("Invalid castling move"),
+        };
+
+        let rook_piece = self.pieces[rook_src.0 as usize];
+        let rook_piece_index = rook_piece.index();
+
+        let src_mask = Bitboard::square_mask(rook_src);
+        let dest_mask = Bitboard::square_mask(rook_dest);
+
+        self.bb_pieces[rook_piece_index] &= !src_mask;
+        self.bb_colors[color_index] &= !src_mask;
+        self.bb_pieces[rook_piece_index] |= dest_mask;
+        self.bb_colors[color_index] |= dest_mask;
+
+        self.pieces[rook_dest.0 as usize] = rook_piece;
+        self.pieces[rook_src.0 as usize] = Piece::NONE;
+    }
+
+    fn make_promotion_move(
+        &mut self,
+        src: Square,
+        dest: Square,
+        dest_index: usize,
+        color: Color,
+        color_index: usize,
+        flag: MoveFlag,
+    ) {
+        let pawn_piece = self.pieces[src.0 as usize];
+        let pawn_piece_index = pawn_piece.index();
+        let pawn_color_index = color_index;
+
+        let src_mask = Bitboard::square_mask(src);
+        let dest_mask = Bitboard::square_mask(dest);
+
+        self.bb_pieces[pawn_piece_index] &= !src_mask;
+        self.bb_colors[pawn_color_index] &= !src_mask;
+        self.bb_pieces[pawn_piece_index] |= dest_mask;
+        self.bb_colors[pawn_color_index] |= dest_mask;
+
+        let promoted_piece_type = match flag {
+            MoveFlag::PROMOTION_KNIGHT => Piece::KNIGHT,
+            MoveFlag::PROMOTION_BISHOP => Piece::BISHOP,
+            MoveFlag::PROMOTION_ROOK => Piece::ROOK,
+            MoveFlag::PROMOTION_QUEEN => Piece::QUEEN,
+            _ => unreachable!(),
+        };
+
+        let promoted_piece = Piece::new(color, promoted_piece_type);
+        let promoted_piece_index = promoted_piece_type.index();
+
+        self.bb_pieces[promoted_piece_index] |= dest_mask;
+        self.bb_colors[color_index] |= dest_mask;
+        self.pieces[dest_index] = promoted_piece;
+    }
+
     pub fn make_move(&mut self, mv: Move) -> Result<(), MakeMoveError> {
         let src = mv.get_source();
         let dest = mv.get_dest();
@@ -84,98 +191,16 @@ impl Board {
         self.pieces[source_index] = Piece::NONE;
 
         match flag {
-            MoveFlag::CAPTURE => {
-                let captured_piece = self.pieces[dest_index];
-                if captured_piece == Piece::NONE {
-                    return Err(MakeMoveError::NoCaptureVictim);
-                }
-                let captured_piece_index = captured_piece.index();
-                let captured_color_index = captured_piece
-                    .get_color()
-                    .ok_or(MakeMoveError::InvalidPieceColor)?
-                    .index();
-
-                self.bb_pieces[captured_piece_index] &= !dest_mask;
-                self.bb_colors[captured_color_index] &= !dest_mask;
-                self.pieces[dest_index] = Piece::NONE;
-            }
-
-            MoveFlag::EN_PASSANT => {
-                let capture_square = if color == Color::WHITE {
-                    Square(dest.0 - 8)
-                } else {
-                    Square(dest.0 + 8)
-                };
-
-                let capture_index = capture_square.0 as usize;
-                let captured_piece = self.pieces[capture_index];
-                let captured_type = captured_piece.index();
-                let captured_color_index = captured_piece
-                    .get_color()
-                    .ok_or(MakeMoveError::InvalidPieceColor)?
-                    .index();
-
-                let mask = Bitboard::square_mask(capture_square);
-                self.bb_pieces[captured_type] &= !mask;
-                self.bb_colors[captured_color_index] &= !mask;
-                self.pieces[capture_index] = Piece::NONE;
-            }
-
-            MoveFlag::CASTLING => {
-                let (rook_src, rook_dest) = match dest {
-                    Square::G1 => (Square::H1, Square::F1),
-                    Square::C1 => (Square::A1, Square::D1),
-                    Square::G8 => (Square::H8, Square::F8),
-                    Square::C8 => (Square::A8, Square::D8),
-                    _ => unreachable!("Invalid castling move"),
-                };
-
-                let rook_piece = self.pieces[rook_src.0 as usize];
-                let rook_piece_index = rook_piece.index();
-                let rook_color_index = color_index;
-
-                let src_mask = Bitboard::square_mask(rook_src);
-                let dest_mask = Bitboard::square_mask(rook_dest);
-
-                self.bb_pieces[rook_piece_index] &= !src_mask;
-                self.bb_colors[rook_color_index] &= !src_mask;
-                self.bb_pieces[rook_piece_index] |= dest_mask;
-                self.bb_colors[rook_color_index] |= dest_mask;
-
-                self.pieces[rook_dest.0 as usize] = rook_piece;
-                self.pieces[rook_src.0 as usize] = Piece::NONE;
-            }
+            MoveFlag::CAPTURE => self.make_capture_move(dest_index, dest_mask)?,
+            MoveFlag::EN_PASSANT => self.make_en_passant_move(dest, color)?,
+            MoveFlag::CASTLING => self.make_castling_move(dest, color_index),
             MoveFlag::PROMOTION_BISHOP
             | MoveFlag::PROMOTION_KNIGHT
             | MoveFlag::PROMOTION_ROOK
             | MoveFlag::PROMOTION_QUEEN => {
-                let pawn_piece = self.pieces[src.0 as usize];
-                let pawn_piece_index = pawn_piece.index();
-                let pawn_color_index = color_index;
-
-                let src_mask = Bitboard::square_mask(src);
-                let dest_mask = Bitboard::square_mask(dest);
-
-                self.bb_pieces[pawn_piece_index] &= !src_mask;
-                self.bb_colors[pawn_color_index] &= !src_mask;
-                self.bb_pieces[pawn_piece_index] |= dest_mask;
-                self.bb_colors[pawn_color_index] |= dest_mask;
-
-                let promoted_piece_type = match flag {
-                    MoveFlag::PROMOTION_KNIGHT => Piece::KNIGHT,
-                    MoveFlag::PROMOTION_BISHOP => Piece::BISHOP,
-                    MoveFlag::PROMOTION_ROOK => Piece::ROOK,
-                    MoveFlag::PROMOTION_QUEEN => Piece::QUEEN,
-                    _ => unreachable!(),
-                };
-
-                let promoted_piece = Piece::new(color, promoted_piece_type);
-                let promoted_piece_index = promoted_piece_type.index();
-
-                self.bb_pieces[promoted_piece_index] |= dest_mask;
-                self.bb_colors[color_index] |= dest_mask;
-                self.pieces[dest_index] = promoted_piece;
+                self.make_promotion_move(src, dest, dest_index, color, color_index, flag);
             }
+
             MoveFlag::NONE => {}
             _ => return Err(MakeMoveError::UnhandledMoveFlag(flag)),
         }
@@ -237,14 +262,14 @@ mod tests {
     fn test_multiple_pieces() {
         let mut board = Board::EMPTY;
 
-        let sq1 = Square(0);
-        let sq2 = Square(63);
+        let sq1 = Square::A1;
+        let sq2 = Square::H8;
 
-        board.bb_pieces[0] = Bitboard::square_mask(sq1);
-        board.bb_pieces[1] = Bitboard::square_mask(sq2);
+        board.bb_pieces[Piece::PAWN.index()] = Bitboard::square_mask(sq1);
+        board.bb_pieces[Piece::KNIGHT.index()] = Bitboard::square_mask(sq2);
 
-        board.bb_colors[0] = Bitboard::square_mask(sq1);
-        board.bb_colors[1] = Bitboard::square_mask(sq2);
+        board.bb_colors[Piece::PAWN.index()] = Bitboard::square_mask(sq1);
+        board.bb_colors[Piece::KNIGHT.index()] = Bitboard::square_mask(sq2);
 
         let occupied = board.all_occupied();
 
@@ -259,9 +284,11 @@ mod tests {
     fn test_simple_move() {
         let mut board = Board::EMPTY;
 
-        let sq_from = Square(0);
-        let sq_to = Square(1);
+        let sq_from = Square::A1;
+        let sq_to = Square::B1;
+
         board.pieces[sq_from.0 as usize] = Piece::new(Color::WHITE, Piece::PAWN);
+
         let piece_index = Piece::PAWN.index();
         board.bb_pieces[piece_index] = Bitboard::square_mask(sq_from);
         board.bb_colors[Color::WHITE.index()] = Bitboard::square_mask(sq_from);
@@ -288,8 +315,8 @@ mod tests {
     fn test_capture_move() {
         let mut board = Board::EMPTY;
 
-        let sq_from = Square(0);
-        let sq_to = Square(1);
+        let sq_from = Square::A1;
+        let sq_to = Square::B1;
         board.pieces[sq_from.0 as usize] = Piece::new(Color::WHITE, Piece::PAWN);
         board.bb_pieces[Piece::PAWN.index()] |= Bitboard::square_mask(sq_from);
         board.bb_colors[Color::WHITE.index()] |= Bitboard::square_mask(sq_from);
@@ -319,8 +346,8 @@ mod tests {
     fn test_multiple_moves() {
         let mut board = Board::EMPTY;
 
-        let sq1 = Square(0);
-        let sq2 = Square(1);
+        let sq1 = Square::A1;
+        let sq2 = Square::B1;
         board.pieces[sq1.0 as usize] = Piece::new(Color::WHITE, Piece::PAWN);
         board.bb_pieces[Piece::PAWN.index()] |= Bitboard::square_mask(sq1);
         board.bb_colors[Color::WHITE.index()] |= Bitboard::square_mask(sq1);
@@ -329,12 +356,12 @@ mod tests {
         board.bb_pieces[Piece::KNIGHT.index()] |= Bitboard::square_mask(sq2);
         board.bb_colors[Color::WHITE.index()] |= Bitboard::square_mask(sq2);
 
-        let mv = Move::new(MoveFlag::NONE, sq1, Square(2));
+        let mv = Move::new(MoveFlag::NONE, sq1, Square::C1);
         board.make_move(mv).unwrap();
 
         assert_eq!(board.pieces[sq1.0 as usize], Piece::NONE);
         assert_eq!(
-            board.pieces[Square(2).0 as usize],
+            board.pieces[Square::C1.0 as usize],
             Piece::new(Color::WHITE, Piece::PAWN)
         );
 
@@ -348,17 +375,17 @@ mod tests {
     fn test_en_passant_white() {
         let mut board = Board::EMPTY;
 
-        let wp_sq = Square(28);
+        let wp_sq = Square::E4;
         board.pieces[wp_sq.0 as usize] = Piece::new(Color::WHITE, Piece::PAWN);
         board.bb_pieces[Piece::PAWN.index()] |= Bitboard::square_mask(wp_sq);
         board.bb_colors[Color::WHITE.index()] |= Bitboard::square_mask(wp_sq);
 
-        let bp_sq = Square(27);
+        let bp_sq = Square::D4;
         board.pieces[bp_sq.0 as usize] = Piece::new(Color::BLACK, Piece::PAWN);
         board.bb_pieces[Piece::PAWN.index()] |= Bitboard::square_mask(bp_sq);
         board.bb_colors[Color::BLACK.index()] |= Bitboard::square_mask(bp_sq);
 
-        let ep_move = Move::new(MoveFlag::EN_PASSANT, wp_sq, Square(35));
+        let ep_move = Move::new(MoveFlag::EN_PASSANT, wp_sq, Square::D5);
         board.make_move(ep_move).expect("En passant should succeed");
 
         assert_eq!(board.pieces[bp_sq.0 as usize], Piece::NONE);
@@ -367,7 +394,10 @@ mod tests {
             Bitboard::EMPTY
         );
 
-        assert_eq!(board.pieces[35], Piece::new(Color::WHITE, Piece::PAWN));
+        assert_eq!(
+            board.pieces[Square::D5.0 as usize],
+            Piece::new(Color::WHITE, Piece::PAWN)
+        );
     }
 
     #[test]
