@@ -54,6 +54,7 @@ pub enum MakeMoveError {
     NoCaptureVictim,
     UnhandledMoveFlag(MoveFlag),
     InvalidPieceColor,
+    MissingFlag(MoveFlag),
 }
 
 impl Board {
@@ -144,7 +145,37 @@ impl Board {
                 self.pieces[rook_dest.0 as usize] = rook_piece;
                 self.pieces[rook_src.0 as usize] = Piece::NONE;
             }
+            MoveFlag::PROMOTION_BISHOP
+            | MoveFlag::PROMOTION_KNIGHT
+            | MoveFlag::PROMOTION_ROOK
+            | MoveFlag::PROMOTION_QUEEN => {
+                let pawn_piece = self.pieces[src.0 as usize];
+                let pawn_piece_index = pawn_piece.index();
+                let pawn_color_index = color_index;
 
+                let src_mask = Bitboard::square_mask(src);
+                let dest_mask = Bitboard::square_mask(dest);
+
+                self.bb_pieces[pawn_piece_index] &= !src_mask;
+                self.bb_colors[pawn_color_index] &= !src_mask;
+                self.bb_pieces[pawn_piece_index] |= dest_mask;
+                self.bb_colors[pawn_color_index] |= dest_mask;
+
+                let promoted_piece_type = match flag {
+                    MoveFlag::PROMOTION_KNIGHT => Piece::KNIGHT,
+                    MoveFlag::PROMOTION_BISHOP => Piece::BISHOP,
+                    MoveFlag::PROMOTION_ROOK => Piece::ROOK,
+                    MoveFlag::PROMOTION_QUEEN => Piece::QUEEN,
+                    _ => unreachable!(),
+                };
+
+                let promoted_piece = Piece::new(color, promoted_piece_type);
+                let promoted_piece_index = promoted_piece_type.index();
+
+                self.bb_pieces[promoted_piece_index] |= dest_mask;
+                self.bb_colors[color_index] |= dest_mask;
+                self.pieces[dest_index] = promoted_piece;
+            }
             MoveFlag::NONE => {}
             _ => return Err(MakeMoveError::UnhandledMoveFlag(flag)),
         }

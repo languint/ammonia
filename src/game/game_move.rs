@@ -44,6 +44,10 @@ impl MoveFlag {
     pub const CAPTURE: MoveFlag = MoveFlag(0b0001);
     pub const EN_PASSANT: MoveFlag = MoveFlag(0b0010);
     pub const CASTLING: MoveFlag = MoveFlag(0b0011);
+    pub const PROMOTION_KNIGHT: MoveFlag = MoveFlag(0b0100);
+    pub const PROMOTION_BISHOP: MoveFlag = MoveFlag(0b0101);
+    pub const PROMOTION_ROOK: MoveFlag = MoveFlag(0b0110);
+    pub const PROMOTION_QUEEN: MoveFlag = MoveFlag(0b111);
 }
 
 #[cfg(test)]
