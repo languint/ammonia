@@ -4,7 +4,7 @@ use crate::board::defs::Square;
 /// and the 12 least significant bits represent the source and destination [`Square`]
 ///
 /// FFFFSSSSSSDDDDDD
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Move(pub u16);
 impl Move {
     pub const FLAG_SHIFT: usize = 12;
@@ -17,6 +17,56 @@ impl Move {
         let d = u16::from(destination.0);
 
         Move(f | s | d)
+    }
+}
+
+impl std::fmt::Display for Move {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let middle_chars = match self.get_flag() {
+            MoveFlag::CAPTURE => "x",
+            _ => "",
+        };
+        let end_chars = match self.get_flag() {
+            MoveFlag::PROMOTION_KNIGHT => "=N",
+            MoveFlag::PROMOTION_BISHOP => "=B",
+            MoveFlag::PROMOTION_ROOK => "=R",
+            MoveFlag::PROMOTION_QUEEN => "=Q",
+            _ => "",
+        };
+
+        write!(
+            f,
+            "{}{}{}{}",
+            self.get_source().get_algebraic(),
+            middle_chars,
+            self.get_dest().get_algebraic(),
+            end_chars
+        )
+    }
+}
+
+impl std::fmt::Debug for Move {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let middle_chars = match self.get_flag() {
+            MoveFlag::CAPTURE => "x",
+            _ => "",
+        };
+        let end_chars = match self.get_flag() {
+            MoveFlag::PROMOTION_KNIGHT => "=N",
+            MoveFlag::PROMOTION_BISHOP => "=B",
+            MoveFlag::PROMOTION_ROOK => "=R",
+            MoveFlag::PROMOTION_QUEEN => "=Q",
+            _ => "",
+        };
+
+        write!(
+            f,
+            "{}{}{}{}",
+            self.get_source().get_algebraic(),
+            middle_chars,
+            self.get_dest().get_algebraic(),
+            end_chars
+        )
     }
 }
 
@@ -47,7 +97,7 @@ impl MoveFlag {
     pub const PROMOTION_KNIGHT: MoveFlag = MoveFlag(0b0100);
     pub const PROMOTION_BISHOP: MoveFlag = MoveFlag(0b0101);
     pub const PROMOTION_ROOK: MoveFlag = MoveFlag(0b0110);
-    pub const PROMOTION_QUEEN: MoveFlag = MoveFlag(0b111);
+    pub const PROMOTION_QUEEN: MoveFlag = MoveFlag(0b0111);
 }
 
 #[cfg(test)]

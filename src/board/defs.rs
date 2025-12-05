@@ -59,7 +59,7 @@ impl Rank {
 }
 
 /// A square on the chess board [0-63]->[a1-h8]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Square(pub u8);
 impl Square {
     pub const A1: Square = Square(0);
@@ -160,8 +160,23 @@ impl Square {
     }
 }
 
+impl Square {
+    pub fn get_algebraic(&self) -> String {
+        let file_char = 'a' as u8 + (self.0 % 8);
+        let rank_char = '1' as u8 + (self.0 / 8);
+        format!("{}{}", file_char as char, rank_char as char)
+    }
+}
+
+impl std::fmt::Display for Square {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.get_algebraic())
+    }
+}
+
 #[cfg(test)]
 mod tests {
+
     use crate::board::defs::{File, NrOf, Rank, Square};
 
     #[test]
@@ -184,5 +199,11 @@ mod tests {
 
         assert_eq!(h8.get_file(), File::H);
         assert_eq!(h8.get_rank(), Rank::EIGHT);
+    }
+
+    #[test]
+    fn display_square() {
+        assert_eq!(Square::A1.get_algebraic(), "a1".to_string());
+        assert_eq!(Square::H8.get_algebraic(), "h8".to_string());
     }
 }

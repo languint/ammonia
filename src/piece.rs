@@ -17,7 +17,7 @@ impl Piece {
 
 impl Piece {
     /// Construct a new [`Piece`] from color and type bits.
-    pub fn new(color: Color, piece_type: Piece) -> Piece {
+    pub const fn new(color: Color, piece_type: Piece) -> Piece {
         Piece((color.0 << Piece::COLOR_SHIFT) | piece_type.0)
     }
 }

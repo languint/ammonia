@@ -7,19 +7,19 @@ impl Bitboard {
     pub const FULL: Bitboard = Bitboard(u64::MAX);
 
     #[inline]
-    pub fn square_mask(square: Square) -> Bitboard {
+    pub const fn square_mask(square: Square) -> Bitboard {
         Bitboard(1u64 << square.0)
     }
 
     #[inline]
-    pub fn file_mask(file: File) -> Bitboard {
+    pub const fn file_mask(file: File) -> Bitboard {
         const FILE_A: u64 = 0x101010101010101;
 
         Bitboard(FILE_A << file.0)
     }
 
     #[inline]
-    pub fn rank_mask(rank: Rank) -> Bitboard {
+    pub const fn rank_mask(rank: Rank) -> Bitboard {
         const RANK_ONE: u64 = 0xFF;
 
         Bitboard(RANK_ONE << (rank.0 * 8))
@@ -29,6 +29,12 @@ impl Bitboard {
 impl Default for Bitboard {
     fn default() -> Self {
         Bitboard::EMPTY
+    }
+}
+
+impl From<u64> for Bitboard {
+    fn from(v: u64) -> Self {
+        Bitboard(v)
     }
 }
 
@@ -66,6 +72,122 @@ impl Bitboard {
         let lsb = self.lsb()?;
         self.0 &= self.0 - 1;
         Some(lsb)
+    }
+}
+
+/// A direction of a bitboard
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Direction(pub i8);
+impl Direction {
+    pub const NORTH: Direction = Direction(8);
+    pub const SOUTH: Direction = Direction(-8);
+    pub const WEST: Direction = Direction(-1);
+    pub const EAST: Direction = Direction(1);
+
+    pub const NORTH_EAST: Direction = Direction::NORTH.add_dir(Direction::EAST);
+    pub const NORTH_WEST: Direction = Direction::NORTH.add_dir(Direction::WEST);
+    pub const SOUTH_EAST: Direction = Direction::SOUTH.add_dir(Direction::EAST);
+    pub const SOUTH_WEST: Direction = Direction::SOUTH.add_dir(Direction::WEST);
+
+    pub const ALL_DIRECTIONS: [Direction; 8] = [
+        Direction::NORTH_WEST,
+        Direction::NORTH,
+        Direction::NORTH_EAST,
+        Direction::EAST,
+        Direction::SOUTH_EAST,
+        Direction::SOUTH,
+        Direction::SOUTH_WEST,
+        Direction::WEST,
+    ];
+}
+
+impl std::ops::Shr<Direction> for Bitboard {
+    type Output = Bitboard;
+    fn shr(self, rhs: Direction) -> Self::Output {
+        Bitboard(
+            self.0
+                >> match rhs {
+                    Direction::NORTH_WEST => Direction::NORTH_WEST.0,
+                    Direction::NORTH => Direction::NORTH.0,
+                    Direction::NORTH_EAST => Direction::NORTH_EAST.0,
+                    Direction::EAST => Direction::EAST.0,
+                    Direction::SOUTH_EAST => -Direction::SOUTH_EAST.0,
+                    Direction::SOUTH => -Direction::SOUTH.0,
+                    Direction::SOUTH_WEST => -Direction::SOUTH_WEST.0,
+                    Direction::WEST => -Direction::WEST.0,
+                    _ => unreachable!(),
+                },
+        )
+    }
+}
+
+impl std::ops::Shl<Direction> for Bitboard {
+    type Output = Bitboard;
+    fn shl(self, rhs: Direction) -> Self::Output {
+        Bitboard(
+            self.0
+                << match rhs {
+                    Direction::NORTH_WEST => Direction::NORTH_WEST.0,
+                    Direction::NORTH => Direction::NORTH.0,
+                    Direction::NORTH_EAST => Direction::NORTH_EAST.0,
+                    Direction::EAST => Direction::EAST.0,
+                    Direction::SOUTH_EAST => -Direction::SOUTH_EAST.0,
+                    Direction::SOUTH => -Direction::SOUTH.0,
+                    Direction::SOUTH_WEST => -Direction::SOUTH_WEST.0,
+                    Direction::WEST => -Direction::WEST.0,
+                    _ => unreachable!(),
+                },
+        )
+    }
+}
+
+impl Direction {
+    pub const fn add_dir(&self, rhs: Self) -> Self {
+        Self(self.0 + rhs.0)
+    }
+}
+
+impl std::ops::Add for Direction {
+    type Output = Direction;
+    fn add(self, rhs: Self) -> Self::Output {
+        self.add_dir(rhs)
+    }
+}
+
+impl Bitboard {
+    pub const NOT_A_FILE: u64 = !0x0101010101010101;
+    pub const NOT_H_FILE: u64 = !0x8080808080808080;
+    pub const NOT_AB_FILE: u64 = !0x0303030303030303;
+    pub const NOT_GH_FILE: u64 = !0xC0C0C0C0C0C0C0C0;
+
+    #[inline(always)]
+    pub fn north_one(self) -> Self {
+        Bitboard(self.0 << 8)
+    }
+
+    #[inline(always)]
+    pub fn south_one(self) -> Self {
+        Bitboard(self.0 >> 8)
+    }
+
+    #[inline(always)]
+    pub fn south_east_one(self) -> Self {
+        Bitboard((self.0 >> 7) & Self::NOT_A_FILE)
+    }
+
+    #[inline(always)]
+    pub fn south_west_one(self) -> Self {
+        Bitboard((self.0 >> 9) & Self::NOT_H_FILE)
+    }
+
+    #[inline(always)]
+    pub fn north_east_one(self) -> Self {
+        Bitboard((self.0 << 9) & Self::NOT_A_FILE)
+    }
+
+    #[inline(always)]
+    pub fn north_west_one(self) -> Self {
+        Bitboard((self.0 << 7) & Self::NOT_H_FILE)
     }
 }
 
