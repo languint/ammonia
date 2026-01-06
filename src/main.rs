@@ -1,1 +1,3 @@
+mod chess;
+
 fn main() {}
