@@ -1,11 +1,10 @@
-[package]
-name = "ammonia"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+resolver = "3"
+members = []
 
-[dependencies]
+[workspace.dependencies]
 
-[lints.clippy]
+[workspace.lints.clippy]
 all = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 unwrap_used = "deny"

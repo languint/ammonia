@@ -1,3 +1,0 @@
-mod chess;
-
-fn main() {}
